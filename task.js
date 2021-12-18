@@ -37,12 +37,36 @@ const del = ()=>{
     else console.log(`Error: item with index ${args[1]} does not exist. Nothing deleted.`)
     })
 }
+const done = ()=>{
+    let tasks=[];
+    let done=[];
+    if(args[1]-1>=0){
+    fs.readFile("task.txt",(err, data)=>{
+        if (data) tasks = data.toString().split('\r\n');
+        tasks.sort((a,b)=>{ a=parseInt(a);b=parseInt(b); return (a>b)?1:-1;});
+        fs.readFile("completed.txt",(err,cdata) => {
+            if(cdata) done = cdata.toString().split("\r\n");
+            done.push(tasks[args[1]-1]);
+             if(args[1]-1<tasks.length){
+                tasks.splice(args[1]-1,1)};
+                fs.writeFile("task.txt",tasks.join('\r\n'), (err) => { 
+                    if (err) throw err;  
+                    fs.writeFile("completed.txt",done.join('\r\n'), (err) => { 
+                        if (err) throw err;
+                        console.log("Marked item as done.")  
+                    })  
+            }) 
+     })
+    })
+    }
+    else console.log(`Error: no incomplete item with index ${args[1]} exists.`);
+}
 switch(args[0]){
     case undefined:
     case "help": help(); break;
     case "ls": list(); break;
     case "add": addTask(); break;
     case "del": del(); break;
-    case "done": break;
+    case "done": done(); break;
     case "report": break;                
 }
