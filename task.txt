@@ -1,5 +1,7 @@
 0 do homework
 1 Buy veggies
 2 Buy milk
+3 assignment
+4 Visit salon
 5 workout
-10 do math 
+10 do math
