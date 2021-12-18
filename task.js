@@ -1,11 +1,6 @@
-const fs =  require("fs");
+const fs = require("fs");
 const path = require("path");
 const args = process.argv.slice(2);
-console.log(args);
-
-const addTask = () =>{
-        
-}
 
 switch(args[0]){
     case undefined:
@@ -26,4 +21,16 @@ switch(args[0]){
         break;
     case "report": 
         break;                
+}
+const addTask = ()=>{
+    let tasks=[];
+    fs.readFile("task.txt",(err, data)=>{
+    if (data) tasks = data.toString().split('\r\n');
+     tasks.push(`${args[1]} ${args[2]}`);
+     tasks.sort((a,b)=>{ a=a.split(" ")[0];a=parseInt(a); b=b.split(" ")[0];b=parseInt(b); return (a>b)?1:-1;});
+     fs.writeFile("task.txt",tasks.join('\r\n'), (err) => { 
+         if (err) throw err;  
+         else console.log(`Added task: "${args[2]}" with priority ${args[1]}`);
+     }) 
+    })
 }
