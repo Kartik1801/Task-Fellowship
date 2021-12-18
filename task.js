@@ -23,11 +23,26 @@ const list = ()=>{
      tasks.forEach((d,i)=>{console.log((`${++i}. ${d.match(/[a-zA-Z ]+/g)} [${d.match(/\d+/g)}]`))})
     })
 }
+const del = ()=>{
+    let tasks=[];
+    fs.readFile("task.txt",(err, data)=>{
+    if (data) tasks = data.toString().split('\r\n');
+     tasks.sort((a,b)=>{a=parseInt(a);b=parseInt(b); return (a>b)?1:-1;});
+     if(args[1]-1<tasks.length&&args[1]-1>0){tasks.splice(args[1]-1,1);  
+     fs.writeFile("task.txt",tasks.join('\r\n'), (err) => { 
+        if (err) throw err;  
+        else console.log(`Deleted item with index ${args[1]}`);
+    })
+    }
+    else console.log(`Error: item with index ${args[1]} does not exist. Nothing deleted.`)
+    })
+}
 switch(args[0]){
     case undefined:
     case "help": help(); break;
     case "ls": list(); break;
     case "add": addTask(); break;
-    case "del": break;
+    case "del": del(); break;
+    case "done": break;
     case "report": break;                
 }

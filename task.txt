@@ -1,5 +1,4 @@
 0 do homework
-1 Buy veggies
 2 Buy milk
 3 assignment
 4 Visit salon
