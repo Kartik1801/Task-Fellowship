@@ -1,5 +1,1 @@
-0 hello world
-1 do math
-1 sleep world
-2 buy veggies
-10 workout
+1 water the plants

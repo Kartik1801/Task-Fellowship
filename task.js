@@ -2,38 +2,55 @@ const fs = require("fs");
 const { get } = require("https");
 const path = require("path");
 const args = process.argv.slice(2);
-
 const getTasks = () => {
-    tasks = fs.readFileSync("task.txt",'utf-8');
+    if(fs.existsSync("task.txt")){
+        try{tasks = fs.readFileSync("task.txt",'utf-8');
+    }
+    catch(err){ 
+    }
     if(tasks)   
-        return tasks.split('\r\n');
+        return tasks.split('\n');
     else 
         return null;    
+    }
+    else return null;
 }
 const updateTasks = (data) => {
-    fs.writeFileSync("Task.txt",data.join('\r\n'));
+    fs.writeFileSync("task.txt",data.join('\n'));
+}
+const updateCompletedTasks = (data) => {
+    fs.writeFileSync("completed.txt",data.join('\n'));
 }
 const getCompletedTasks = () => {
-    return fs.readFileSync("completed.txt",'utf-8')
+    if(fs.existsSync("completed.txt")){
+        try{
+            tasks = fs.readFileSync("completed.txt",'utf-8');
+        }
+        catch(err){ 
+        }
+        if(tasks)   
+            return tasks.split('\n');
+        else 
+            return null;    
+        }
+    else return null;    
 }
 const compareTaskPriority = (a, b) => {
     return parseInt(a) > parseInt(b) ? 1 : -1;
 }
-
-const help = () => console.log(`
+const help = () => console.log(`Usage :-
 $ ./task add 2 hello world    # Add a new item with priority 2 and text "hello world" to the list
 $ ./task ls                   # Show incomplete priority list items sorted by priority in ascending order
 $ ./task del INDEX            # Delete the incomplete item with the given index
 $ ./task done INDEX           # Mark the incomplete item with the given index as complete
 $ ./task help                 # Show usage
-$ ./task report               # Statistics
-`);
-
+$ ./task report               # Statistics`);
 const addTask = ()=>{
-    if(!args[1]) console.log("Error: Missing priority string. Nothing added!");
+    if(!args[1]) console.log("Error: Missing tasks string. Nothing added!");
     else if(!args[2]) console.log("Error: Missing tasks string. Nothing added!");
     else{
         let task = getTasks();
+        if(!task) task =[]
         task.push(`${args[1]} ${args[2]}`);
         task.sort(compareTaskPriority);
         try { 
@@ -45,15 +62,12 @@ const addTask = ()=>{
         console.log(`Added task: "${args[2]}" with priority ${args[1]}`)
     }
 }
-
 const list = ()=>{
     let tasks = getTasks();
      if(!tasks) console.log("There are no pending tasks!");
      else tasks.forEach((d,i)=>{console.log((`${++i}. ${d.match(/[a-zA-Z ]+/g)} [${d.match(/\d+/g)}]`))})
 }
-
 const del = ()=>{
-    
     if (!args[1]) console.log("Error: Missing NUMBER for deleting tasks.");
     else{
         let tasks=getTasks();
@@ -68,62 +82,47 @@ const del = ()=>{
             console.log(`Deleted task #${args[1]}`);   
         }
         else console.log(`Error: task with index #${args[1]} does not exist. Nothing deleted.`)    
-    } /* 
-     if(args[1]-1<tasks.length&&args[1]-1>=0){
-          
-        fs.writeFile("task.txt",tasks.join('\r\n'), (err) => { 
-        if (err) throw err;  
-        else console.log(`Deleted task #${args[1]}`);
-    }) */
-    
-    
+    } 
 }
-
 const done = ()=>{
-    let tasks=[];
-    let done=[];
     if (!args[1])
-        {console.log("Error: Missing NUMBER for marking tasks as done.");return;}
-    if(args[1]-1>=0){
-    fs.readFile("task.txt",(err, data)=>{
-        if (data) tasks = data.toString().split('\r\n');
-        tasks.sort((a,b)=>{ a=parseInt(a);b=parseInt(b); return (a>b)?1:-1;});
-        fs.readFile("completed.txt",(err,cdata) => {
-            if(cdata) done = cdata.toString().split("\r\n");
-            if(args[1]-1<tasks.length){
-                done.push(tasks[args[1]-1].match(/[a-zA-Z][a-zA-Z ]+/g)[0]);
-                tasks.splice(args[1]-1,1)};
-                fs.writeFile("task.txt",tasks.join('\r\n'), (err) => { 
-                    if (err) throw err;  
-                    fs.writeFile("completed.txt",done.join('\r\n'), (err) => { 
-                        if (err) throw err;
-                        console.log("Marked item as done.")  
-                    })  
-                }) 
-            })
-        })
+        console.log("Error: Missing NUMBER for marking tasks as done.");
+    else{
+        let tasks=getTasks();
+        let done=getCompletedTasks();
+        if(!done) done = [];
+        if( args[1]-1 < tasks.length && args[1] > 0){
+            done.push((tasks[args[1]-1]).split(/[\d]+ /)[1]);
+            tasks.splice(args[1]-1,1);
+            tasks.sort(compareTaskPriority);
+            try { 
+                updateTasks(tasks);
+                updateCompletedTasks(done)
+            }
+            catch(err){
+                console.error(err);
+            }
+            console.log("Marked item as done.");
+        }
+        else {
+            console.log(`Error: no incomplete item with index #${args[1]} exists.`)
+        }
     }
-    else console.log(`Error: no incomplete item with index #${args[1]} exists.`);
 }
-
 const report = ()=>{
-    let tasks=[];
-    let done=[];
-    fs.readFile("task.txt",(err, data)=>{
-        if (data) tasks = data.toString().split('\r\n');
-            tasks.sort((a,b)=>{a=parseInt(a);b=parseInt(b);return (a>b)?1:-1;});
-        fs.readFile("completed.txt",(err,data)=>{
-            if (data) done = data.toString().split('\r\n');  
-            console.log(`Pending : ${tasks.length}`);  
-            tasks.forEach((d,i)=>{console.log((`${++i}. ${d.match(/[a-zA-Z ]+/g)} [${d.match(/\d+/g)}].`))})
-            console.log(`Completed : ${done.length}`);  
-            done.forEach((d,i)=>{console.log((`${++i}. ${d}`))
-        })
+    let tasks=getTasks();
+    let done=getCompletedTasks(); 
+    if(!tasks) tasks = [];
+        console.log(`Pending : ${tasks.length}`);
+        tasks.forEach((d, i) => {
+        console.log((`${++i}. ${d.match(/[a-zA-Z ]+/g)} [${d.match(/\d+/g)[0]}].`));
     })
-})
+    if(!done) done = [];
+        console.log(`Completed : ${done.length}`);  
+        done.forEach((d,i) => {
+        console.log((`${++i}. ${d}`))
+    })
 }
-
-
 switch(args[0]){
     case undefined:
     case "help": help(); break;
@@ -132,4 +131,4 @@ switch(args[0]){
     case "del": del(); break;
     case "done": done(); break;
     case "report": report(); break;                
-} 
+}
